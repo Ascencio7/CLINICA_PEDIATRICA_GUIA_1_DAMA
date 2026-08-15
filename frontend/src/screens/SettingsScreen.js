@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, Switch, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Switch, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SettingsScreen = () => {
   const [notifications, setNotifications] = useState(true);

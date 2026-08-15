@@ -1,14 +1,6 @@
 import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  SafeAreaView, 
-  KeyboardAvoidingView, 
-  Platform 
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');

@@ -1,18 +1,59 @@
-import React from 'react';
-import { SafeAreaView, ScrollView, View, Text, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import API from '../config';
 
 const MedicalHistoryScreen = ({ route }) => {
-  // `route.params` puede contener el paciente seleccionado en una implementación real
-  const records = [
-    { id: 1, date: '2026-06-12', note: 'Control de crecimiento: parámetros normales.' },
-    { id: 2, date: '2025-12-01', note: 'Vacunación completa según calendario.' },
-    { id: 3, date: '2024-09-20', note: 'Consulta por fiebre, tratamiento ambulatorio.' },
-  ];
+  const patient = route?.params?.patient;
+
+  const [records, setRecords] = React.useState([]);
+  const [note, setNote] = React.useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (!patient || !patient._id && !patient.id) {
+          setRecords([]);
+          return;
+        }
+        const id = patient._id || patient.id;
+        const res = await fetch(`${API}/history/${id}`);
+        const data = await res.json();
+        setRecords(data);
+      } catch (e) {
+        console.warn('Error cargando historial desde backend:', e);
+      }
+    };
+    load();
+  }, [patient]);
+
+  const addNote = () => {
+    if (!note.trim()) return;
+    const id = patient._id || patient.id;
+    fetch(`${API}/history/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: note.trim() }),
+    })
+      .then(r => r.json())
+      .then(created => setRecords(prev => [created, ...prev]))
+      .catch(e => console.warn('Error guardando nota:', e));
+    setNote('');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.header}>Historial Médico</Text>
+        {patient ? <Text style={styles.subHeader}>Paciente: {patient.name}</Text> : null}
+
+        <View style={styles.addRow}>
+          <TextInput placeholder="Agregar nota clínica" style={styles.input} value={note} onChangeText={setNote} />
+          <TouchableOpacity style={styles.addNoteBtn} onPress={addNote}>
+            <Text style={styles.addNoteText}>Añadir</Text>
+          </TouchableOpacity>
+        </View>
 
         {records.map(r => (
           <View key={r.id} style={styles.recordCard}>
@@ -40,6 +81,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#0F172A',
     marginBottom: 12,
+  },
+  subHeader: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 12,
+  },
+  addRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  input: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: '#FFFFFF',
+  },
+  addNoteBtn: {
+    marginLeft: 8,
+    backgroundColor: '#0A4D68',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  addNoteText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   recordCard: {
     backgroundColor: '#FFFFFF',
