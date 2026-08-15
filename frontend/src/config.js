@@ -4,28 +4,44 @@ import Constants from 'expo-constants';
 // Resolución de host para llamadas al backend:
 // - Android emulator: 10.0.2.2
 // - Web: 127.0.0.1
-// - Native device (Expo Go): se intenta obtener la IP del packager (debuggerHost) a través de Constants
-//   si no se detecta, caerá a la IP LAN por defecto abajo (ajústala si tu IP cambia).
+// - Dispositivo real: usa la IP del packager / debuggerHost real de Expo
+// - Fallback: IP LAN por defecto si no se puede detectar automáticamente
 const DEFAULT_LAN_HOST = '192.168.1.123';
 
+function normalizeHost(value) {
+  if (!value) return null;
+
+  const text = String(value).trim();
+  if (!text || text === 'localhost' || text === '0.0.0.0') {
+    return null;
+  }
+
+  return text.replace(/^https?:\/\//, '').split(':')[0];
+}
+
 function resolveHost() {
-	// Intenta leer debuggerHost desde el manifiesto (varía según SDK/version)
-	const manifest = Constants.manifest || Constants.expoConfig || Constants.manifest2 || null;
-	const debuggerHost = manifest && (manifest.debuggerHost || manifest.debuggerHost?.split?.length ? manifest.debuggerHost : null) || (manifest && manifest.packagerOpts && manifest.packagerOpts.devClient && manifest.debuggerHost) || null;
-	if (debuggerHost) {
-		// formato: "192.168.1.10:8081"
-		return String(debuggerHost).split(':')[0];
-	}
+  const candidates = [
+    Constants.expoConfig?.hostUri,
+    Constants.expoConfig?.debuggerHost,
+    Constants.expoConfig?.packagerOpts?.devClient?.hostUri,
+    Constants.manifest?.debuggerHost,
+    Constants.manifest2?.debuggerHost,
+    Constants.manifest?.packagerOpts?.devClient?.debuggerHost,
+  ];
 
-	if (Platform.OS === 'web') return '127.0.0.1';
+  for (const candidate of candidates) {
+    const host = normalizeHost(candidate);
+    if (host) return host;
+  }
 
-	// Si es Android y no detectamos debuggerHost, asumimos emulador y usamos 10.0.2.2
-	if (Platform.OS === 'android') return '10.0.2.2';
+  if (Platform.OS === 'web') return '127.0.0.1';
 
-	return DEFAULT_LAN_HOST;
+  if (Platform.OS === 'android') return '10.0.2.2';
+
+  return DEFAULT_LAN_HOST;
 }
 
 const host = resolveHost();
-const API = `http://${host}:5000/api`;
+const API = process.env.EXPO_PUBLIC_API_URL || `http://${host}:5000/api`;
 
 export default API;
