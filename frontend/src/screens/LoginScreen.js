@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '../context/SessionContext';
 
 const LoginScreen = ({ navigation }) => {
-  const { setUserName } = useSession();
+  const { setUserName, colors } = useSession();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -22,24 +22,24 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           
           {/* Logo / Encabezado */}
           <View style={styles.header}>
             <Text style={styles.title}>Clínica Pediátrica</Text>
-            <Text style={styles.subtitle}>Ingresa tus credenciales de acceso</Text>
+            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Ingresa tus credenciales de acceso</Text>
           </View>
 
           {/* Formulario */}
           <View style={styles.form}>
-            <Text style={styles.label}>Usuario</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Usuario</Text>
             <TextInput 
-              style={styles.input} 
+              style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]} 
               onChangeText={setUsername} 
               value={username} 
               placeholder="Ej. dr_ascencio"
@@ -48,9 +48,9 @@ const LoginScreen = ({ navigation }) => {
               autoCorrect={false}
             />
 
-            <Text style={styles.label}>Contraseña</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Contraseña</Text>
             <TextInput 
-              style={styles.input} 
+              style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]} 
               onChangeText={setPassword} 
               value={password} 
               placeholder="••••••••"

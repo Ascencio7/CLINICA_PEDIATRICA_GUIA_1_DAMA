@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import API from '../config';
 import UserBanner from '../components/UserBanner';
+import { useSession } from '../context/SessionContext';
 
 const MedicalHistoryScreen = ({ route }) => {
+  const { colors } = useSession();
   const patient = route?.params?.patient;
 
   const [records, setRecords] = React.useState([]);
@@ -44,11 +46,11 @@ const MedicalHistoryScreen = ({ route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <UserBanner />
-        <Text style={styles.header}>Historial Médico</Text>
-        {patient ? <Text style={styles.subHeader}>Paciente: {patient.name || patient.nombre}</Text> : null}
+        <Text style={[styles.header, { color: colors.text }]}>Historial Médico</Text>
+        {patient ? <Text style={[styles.subHeader, { color: colors.secondaryText }]}>Paciente: {patient.name || patient.nombre}</Text> : null}
 
         <View style={styles.addRow}>
           <TextInput placeholder="Agregar nota clínica" style={styles.input} value={note} onChangeText={setNote} />
@@ -58,9 +60,9 @@ const MedicalHistoryScreen = ({ route }) => {
         </View>
 
         {records.map(r => (
-          <View key={r.id} style={styles.recordCard}>
+          <View key={r.id} style={[styles.recordCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.recordDate}>{r.date}</Text>
-            <Text style={styles.recordNote}>{r.note}</Text>
+            <Text style={[styles.recordNote, { color: colors.text }]}>{r.note}</Text>
           </View>
         ))}
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Pantallas con los nombres EXACTOS de tu estructura
@@ -10,14 +10,26 @@ import SettingsScreen from './frontend/src/screens/SettingsScreen';
 import PacienteScreen from './frontend/src/screens/PacienteScreen'; // 👈 Nombre en singular
 import AppointmentScreen from './frontend/src/screens/AppointmentScreen';
 import MedicalHistoryScreen from './frontend/src/screens/MedicalHistoryScreen';
-import { SessionProvider } from './frontend/src/context/SessionContext';
+import { SessionProvider, useSession } from './frontend/src/context/SessionContext';
 
 const Stack = createNativeStackNavigator();
 
-const App = () => {
+const AppContent = () => {
+  const { darkMode } = useSession();
+
   return (
-    <SessionProvider>
-      <NavigationContainer>
+    <NavigationContainer theme={{
+      ...(darkMode ? DarkTheme : DefaultTheme),
+      colors: {
+        ...(darkMode ? DarkTheme.colors : DefaultTheme.colors),
+        primary: '#0A4D68',
+        background: darkMode ? '#0F172A' : '#FFFFFF',
+        card: darkMode ? '#1E293B' : '#FFFFFF',
+        text: darkMode ? '#F8FAFC' : '#0F172A',
+        border: darkMode ? '#475569' : '#E2E8F0',
+        notification: '#DC2626',
+      },
+    }}>
         <Stack.Navigator 
           initialRouteName="Login"
           screenOptions={{
@@ -63,7 +75,14 @@ const App = () => {
           options={{ title: 'Ajustes' }} 
         />
         </Stack.Navigator>
-      </NavigationContainer>
+    </NavigationContainer>
+  );
+};
+
+const App = () => {
+  return (
+    <SessionProvider>
+      <AppContent />
     </SessionProvider>
   );
 };

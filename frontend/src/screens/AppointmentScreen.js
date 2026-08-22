@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import API from '../config';
 import UserBanner from '../components/UserBanner';
+import { useSession } from '../context/SessionContext';
 
 const AppointmentScreen = ({ navigation }) => {
+  const { colors } = useSession();
   const [appointments, setAppointments] = useState([
     // se inicializa vacío y se carga desde AsyncStorage
   ]);
@@ -16,7 +18,7 @@ const AppointmentScreen = ({ navigation }) => {
         const res = await fetch(`${API}/appointments`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        setAppointments(data);
+        setAppointments(Array.isArray(data) ? data.filter(Boolean) : []);
       } catch (e) {
         console.warn('Error cargando citas desde backend:', e);
         Alert.alert('No se pudo cargar', `Verifica que el backend esté activo en ${API}`);
@@ -75,27 +77,27 @@ const AppointmentScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <UserBanner />
-        <Text style={styles.header}>Agenda de Citas</Text>
+        <Text style={[styles.header, { color: colors.text }]}>Agenda de Citas</Text>
 
         <TouchableOpacity style={styles.addButton} activeOpacity={0.8} onPress={() => setModalVisible(true)}>
           <Text style={styles.addButtonText}>+ Nueva Cita</Text>
         </TouchableOpacity>
 
-        {appointments.map(item => {
+        {appointments.filter(Boolean).map(item => {
           const displayTime = item.time || item.hora || '';
           const displayPatient = item.patientName || item.nombre || item.patient || '';
           const displayReason = item.reason || item.motivo || item.descripcion || '';
           const apptId = item._id || item.id;
           return (
-            <View key={apptId} style={styles.card}>
+              <View key={apptId} style={[styles.card, { backgroundColor: colors.surface }]}>
               <View style={styles.cardLeft}>
                 <Text style={styles.time}>{displayTime}</Text>
               </View>
                   <View style={styles.cardRight}>
-                    <Text style={styles.patient}>{displayPatient}</Text>
+                    <Text style={[styles.patient, { color: colors.text }]}>{displayPatient}</Text>
                     <Text style={styles.reason}>{displayReason}</Text>
                   </View>
                   <TouchableOpacity style={styles.deleteBtn} onPress={() => {
@@ -116,8 +118,8 @@ const AppointmentScreen = ({ navigation }) => {
 
         <Modal visible={modalVisible} animationType="slide" transparent>
           <View style={styles.modalWrap}>
-            <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Crear Nueva Cita</Text>
+            <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Crear Nueva Cita</Text>
               <TextInput placeholder="Nombre del paciente" style={styles.input} value={nombre} onChangeText={setNombre} />
               <TextInput placeholder="Hora (ej. 10:30)" style={styles.input} value={hora} onChangeText={setHora} />
               <TextInput placeholder="Motivo" style={styles.input} value={motivo} onChangeText={setMotivo} />

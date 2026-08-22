@@ -5,27 +5,25 @@ import UserBanner from '../components/UserBanner';
 import { useSession } from '../context/SessionContext';
 
 const SettingsScreen = ({ navigation }) => {
-  const { setUserName } = useSession();
+  const { setUserName, darkMode, setDarkMode, colors } = useSession();
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <UserBanner />
-        <Text style={styles.screenHeader}>Ajustes del Sistema</Text>
+        <Text style={[styles.screenHeader, { color: colors.text }]}>Ajustes del Sistema</Text>
 
         {/* Sección 1: Preferencias de la App */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionHeader}>Preferencias Generales</Text>
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionHeader, { color: colors.secondaryText }]}>Preferencias Generales</Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingTitle}>Notificaciones de Citas</Text>
-              <Text style={styles.settingSubtitle}>Recordatorios de la agenda diaria</Text>
+              <Text style={[styles.settingTitle, { color: colors.text }]}>Notificaciones de Citas</Text>
+              <Text style={[styles.settingSubtitle, { color: colors.secondaryText }]}>Recordatorios de la agenda diaria</Text>
             </View>
             <Switch
               value={notifications}
@@ -35,12 +33,12 @@ const SettingsScreen = ({ navigation }) => {
             />
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.settingRow}>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingTitle}>Modo Oscuro</Text>
-              <Text style={styles.settingSubtitle}>Ajustar la paleta de interfaz</Text>
+              <Text style={[styles.settingTitle, { color: colors.text }]}>Modo Oscuro</Text>
+              <Text style={[styles.settingSubtitle, { color: colors.secondaryText }]}>Ajustar la paleta de interfaz</Text>
             </View>
             <Switch
               value={darkMode}
@@ -52,18 +50,18 @@ const SettingsScreen = ({ navigation }) => {
         </View>
 
         {/* Sección 2: Seguridad y Sistema */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionHeader}>Seguridad y Cuenta</Text>
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionHeader, { color: colors.secondaryText }]}>Seguridad y Cuenta</Text>
 
           <TouchableOpacity style={styles.actionRow} activeOpacity={0.7}>
-            <Text style={styles.actionTitle}>Cambiar Contraseña</Text>
+            <Text style={[styles.actionTitle, { color: colors.text }]}>Cambiar Contraseña</Text>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <TouchableOpacity style={styles.actionRow} activeOpacity={0.7}>
-            <Text style={styles.actionTitle}>Políticas de Privacidad Médica</Text>
+            <Text style={[styles.actionTitle, { color: colors.text }]}>Políticas de Privacidad Médica</Text>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
         </View>
@@ -74,7 +72,7 @@ const SettingsScreen = ({ navigation }) => {
           activeOpacity={0.8}
           onPress={() => {
             setUserName('');
-            navigation?.replace('Login');
+            navigation?.reset({ index: 0, routes: [{ name: 'Login' }] });
           }}
         >
           <Text style={styles.logoutText}>Cerrar Sesión</Text>

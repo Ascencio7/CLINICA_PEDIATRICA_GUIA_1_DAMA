@@ -5,10 +5,10 @@ import UserBanner from '../components/UserBanner';
 import { useSession } from '../context/SessionContext';
 
 const ProfileScreen = ({ navigation }) => {
-  const { userName } = useSession();
+  const { userName, colors } = useSession();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -19,13 +19,13 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.avatarPlaceholder}>
             <Text style={styles.avatarText}></Text>
           </View>
-          <Text style={styles.doctorName}>{userName}</Text>
+          <Text style={[styles.doctorName, { color: colors.text }]}>{userName}</Text>
           <Text style={styles.specialty}>Pediatra General / Neonatólogo</Text>
         </View>
 
         {/* Sección de Detalles */}
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>Información Profesional</Text>
+        <View style={[styles.infoSection, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text, borderBottomColor: colors.border }]}>Información Profesional</Text>
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Especialidad</Text>

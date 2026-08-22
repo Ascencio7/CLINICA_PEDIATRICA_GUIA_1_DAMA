@@ -3,12 +3,12 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSession } from '../context/SessionContext';
 
 const UserBanner = () => {
-  const { userName } = useSession();
+  const { userName, darkMode } = useSession();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Sesión activa</Text>
-      <Text style={styles.name}>{userName}</Text>
+    <View style={[styles.container, darkMode && styles.darkContainer]}>
+      <Text style={[styles.label, darkMode && styles.darkLabel]}>Sesión activa</Text>
+      <Text style={[styles.name, darkMode && styles.darkName]}>{userName}</Text>
     </View>
   );
 };
@@ -32,6 +32,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     marginTop: 2,
+  },
+  darkContainer: {
+    backgroundColor: '#264653',
+  },
+  darkLabel: {
+    color: '#B7E4C7',
+  },
+  darkName: {
+    color: '#D8F3DC',
   },
 });
 

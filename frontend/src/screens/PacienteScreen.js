@@ -4,8 +4,10 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import API from '../config';
 import UserBanner from '../components/UserBanner';
+import { useSession } from '../context/SessionContext';
 
 const PacientesScreen = ({ navigation }) => {
+  const { colors } = useSession();
   const [patients, setPatients] = useState([]);
 
   useFocusEffect(useCallback(() => {
@@ -14,7 +16,7 @@ const PacientesScreen = ({ navigation }) => {
         const res = await fetch(`${API}/patients`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        setPatients(data);
+        setPatients(Array.isArray(data) ? data.filter(Boolean) : []);
       } catch (e) {
         console.warn('Error cargando pacientes desde backend:', e);
         Alert.alert('No se pudo cargar', `Verifica que el backend esté activo en ${API}`);
@@ -84,6 +86,7 @@ const PacientesScreen = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => {
+    if (!item) return null;
     const displayName = item.name || item.nombre || item.patientName || item.patient || '';
     const displayAge = item.age || item.edad || '';
     const displayPhone = item.phone || item.telefono || item.phoneNumber || '';
@@ -91,7 +94,7 @@ const PacientesScreen = ({ navigation }) => {
     return (
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.patientName}>{displayName}</Text>
+          <Text style={[styles.patientName, { color: colors.text }]}>{displayName}</Text>
           {displayAge ? <Text style={styles.patientAge}>{displayAge} años</Text> : null}
           {displayPhone ? <Text style={styles.patientAge}>Tel: {displayPhone}</Text> : null}
           {displayEmail ? <Text style={styles.patientAge}>Email: {displayEmail}</Text> : null}
@@ -116,10 +119,10 @@ const PacientesScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <UserBanner />
-      <Text style={styles.title}>Pacientes</Text>
-      <Text style={styles.subtitle}>Añadir y gestionar pacientes</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Pacientes</Text>
+      <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Añadir y gestionar pacientes</Text>
 
       <View style={styles.formRow}>
         <TextInput placeholder="Nombre" style={styles.input} value={nombre} onChangeText={setNombre} />
@@ -134,7 +137,7 @@ const PacientesScreen = ({ navigation }) => {
         <TextInput placeholder="Correo" style={[styles.input, { width: 200, marginLeft: 8 }]} value={correo} onChangeText={setCorreo} keyboardType="email-address" />
       </View>
 
-      <FlatList data={patients} keyExtractor={i => String(i._id || i.id)} renderItem={renderItem} style={{ marginTop: 12 }} />
+      <FlatList data={patients.filter(Boolean)} keyExtractor={(item, index) => String(item._id || item.id || `patient-${index}`)} renderItem={renderItem} style={{ marginTop: 12 }} />
     </View>
   );
 };

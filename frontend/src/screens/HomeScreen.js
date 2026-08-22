@@ -1,40 +1,40 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, StatusBar, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import UserBanner from '../components/UserBanner';
+import { useSession } from '../context/SessionContext';
 
 const HomeScreen = ({ navigation }) => {
+  const { userName, colors, darkMode } = useSession();
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#EBF4F6" />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <UserBanner />
         {/* Encabezado */}
         <View style={styles.headerContainer}>
-          <Text style={styles.greeting}>¡Bienvenido Doctor(a)!</Text>
-          <Text style={styles.title}>Clínica Pediátrica</Text>
-          <Text style={styles.subtitle}>Panel de Control</Text>
+          <Text style={[styles.greeting, { color: darkMode ? '#7DD3FC' : '#088395' }]}>Bienvenido/a {userName}, a la</Text>
+          <Text style={[styles.title, { color: darkMode ? '#BAE6FD' : '#0A4D68' }]}>Clínica Pediátrica</Text>
+          <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Panel de Control</Text>
         </View>
 
         {/* Menú Principal de Opciones en Grid Responsivo */}
         <View style={styles.menuGrid}>
           
           <TouchableOpacity 
-            style={styles.card} 
+            style={[styles.card, { backgroundColor: colors.surface }]} 
             activeOpacity={0.8}
             onPress={() => navigation?.navigate('Pacientes')}
           >
-            <Text style={styles.cardIcon}>👶</Text>
+            <Text style={styles.cardIcon}>🗂️</Text>
             <Text style={styles.cardTitle}>Pacientes</Text>
             <Text style={styles.cardSubtitle}>Expedientes e historial</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.card} 
+            style={[styles.card, { backgroundColor: colors.surface }]} 
             activeOpacity={0.8}
             onPress={() => navigation?.navigate('Citas')}
           >
@@ -44,17 +44,17 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.card} 
+            style={[styles.card, { backgroundColor: colors.surface }]} 
             activeOpacity={0.8}
             onPress={() => navigation?.navigate('Perfil')}
           >
-            <Text style={styles.cardIcon}>👨‍⚕️</Text>
+            <Text style={styles.cardIcon}>👤</Text>
             <Text style={styles.cardTitle}>Mi Perfil</Text>
             <Text style={styles.cardSubtitle}>Datos del médico</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.card} 
+            style={[styles.card, { backgroundColor: colors.surface }]} 
             activeOpacity={0.8}
             onPress={() => navigation?.navigate('Configuracion')}
           >
@@ -64,7 +64,7 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.card} 
+            style={[styles.card, { backgroundColor: colors.surface }]} 
             activeOpacity={0.8}
             onPress={() => navigation?.navigate('Historial')}
           >
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   greeting: {
-    fontSize: 15,
+    fontSize: 19,
     color: '#088395',
     fontWeight: '600',
   },
