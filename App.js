@@ -10,20 +10,22 @@ import SettingsScreen from './frontend/src/screens/SettingsScreen';
 import PacienteScreen from './frontend/src/screens/PacienteScreen'; // 👈 Nombre en singular
 import AppointmentScreen from './frontend/src/screens/AppointmentScreen';
 import MedicalHistoryScreen from './frontend/src/screens/MedicalHistoryScreen';
+import { SessionProvider } from './frontend/src/context/SessionContext';
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator 
-        initialRouteName="Login"
-        screenOptions={{
-          headerStyle: { backgroundColor: '#0A4D68' },
-          headerTintColor: '#FFFFFF',
-          headerTitleStyle: { fontWeight: 'bold' },
-        }}
-      >
+    <SessionProvider>
+      <NavigationContainer>
+        <Stack.Navigator 
+          initialRouteName="Login"
+          screenOptions={{
+            headerStyle: { backgroundColor: '#0A4D68' },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        >
         <Stack.Screen 
           name="Login" 
           component={LoginScreen} 
@@ -60,8 +62,9 @@ const App = () => {
           component={SettingsScreen} 
           options={{ title: 'Ajustes' }} 
         />
-      </Stack.Navigator>
-    </NavigationContainer>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SessionProvider>
   );
 };
 

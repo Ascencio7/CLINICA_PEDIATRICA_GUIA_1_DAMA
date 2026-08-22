@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSession } from '../context/SessionContext';
 
 const LoginScreen = ({ navigation }) => {
+  const { setUserName } = useSession();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -12,7 +14,8 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
     
-    // Navega a Home reemplazando la pila para no poder volver atrás al Login
+    setUserName(username.trim());
+
     if (navigation) {
       navigation.replace('Home');
     }

@@ -1,20 +1,25 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import UserBanner from '../components/UserBanner';
+import { useSession } from '../context/SessionContext';
 
 const ProfileScreen = ({ navigation }) => {
+  const { userName } = useSession();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <UserBanner />
         {/* Avatar / Tarjeta de Presentación */}
         <View style={styles.avatarCard}>
           <View style={styles.avatarPlaceholder}>
             <Text style={styles.avatarText}></Text>
           </View>
-          <Text style={styles.doctorName}>Dr. Jonathan Ascencio</Text>
+          <Text style={styles.doctorName}>{userName}</Text>
           <Text style={styles.specialty}>Pediatra General / Neonatólogo</Text>
         </View>
 

@@ -1,23 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 import API from '../config';
+import UserBanner from '../components/UserBanner';
 
 const PacientesScreen = ({ navigation }) => {
   const [patients, setPatients] = useState([]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     const load = async () => {
       try {
         const res = await fetch(`${API}/patients`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setPatients(data);
       } catch (e) {
         console.warn('Error cargando pacientes desde backend:', e);
+        Alert.alert('No se pudo cargar', `Verifica que el backend esté activo en ${API}`);
       }
     };
     load();
-  }, []);
+  }, []));
 
   const [nombre, setNombre] = useState('');
   const [edad, setEdad] = useState('');
@@ -113,6 +117,7 @@ const PacientesScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <UserBanner />
       <Text style={styles.title}>Pacientes</Text>
       <Text style={styles.subtitle}>Añadir y gestionar pacientes</Text>
 

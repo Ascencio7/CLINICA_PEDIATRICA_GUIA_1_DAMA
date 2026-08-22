@@ -1,25 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import API from '../config';
+import UserBanner from '../components/UserBanner';
 
 const AppointmentScreen = ({ navigation }) => {
   const [appointments, setAppointments] = useState([
     // se inicializa vacío y se carga desde AsyncStorage
   ]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     const load = async () => {
       try {
         const res = await fetch(`${API}/appointments`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setAppointments(data);
       } catch (e) {
         console.warn('Error cargando citas desde backend:', e);
+        Alert.alert('No se pudo cargar', `Verifica que el backend esté activo en ${API}`);
       }
     };
     load();
-  }, []);
+  }, []));
 
   const [modalVisible, setModalVisible] = useState(false);
   const [nombre, setNombre] = useState('');
@@ -73,6 +77,7 @@ const AppointmentScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <UserBanner />
         <Text style={styles.header}>Agenda de Citas</Text>
 
         <TouchableOpacity style={styles.addButton} activeOpacity={0.8} onPress={() => setModalVisible(true)}>

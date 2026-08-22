@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, StatusBar, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import UserBanner from '../components/UserBanner';
 
 const HomeScreen = ({ navigation }) => {
   return (
@@ -11,6 +12,7 @@ const HomeScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <UserBanner />
         {/* Encabezado */}
         <View style={styles.headerContainer}>
           <Text style={styles.greeting}>¡Bienvenido Doctor(a)!</Text>
@@ -59,6 +61,16 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.cardIcon}>⚙️</Text>
             <Text style={styles.cardTitle}>Ajustes</Text>
             <Text style={styles.cardSubtitle}>Configuración general</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.card} 
+            activeOpacity={0.8}
+            onPress={() => navigation?.navigate('Historial')}
+          >
+            <Text style={styles.cardIcon}>📋</Text>
+            <Text style={styles.cardTitle}>Historial</Text>
+            <Text style={styles.cardSubtitle}>Notas médicas</Text>
           </TouchableOpacity>
 
         </View>

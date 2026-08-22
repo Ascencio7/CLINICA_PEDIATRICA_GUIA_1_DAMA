@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Switch, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import UserBanner from '../components/UserBanner';
+import { useSession } from '../context/SessionContext';
 
-const SettingsScreen = () => {
+const SettingsScreen = ({ navigation }) => {
+  const { setUserName } = useSession();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -12,6 +15,7 @@ const SettingsScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <UserBanner />
         <Text style={styles.screenHeader}>Ajustes del Sistema</Text>
 
         {/* Sección 1: Preferencias de la App */}
@@ -65,7 +69,14 @@ const SettingsScreen = () => {
         </View>
 
         {/* Cierre de Sesión */}
-        <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          activeOpacity={0.8}
+          onPress={() => {
+            setUserName('');
+            navigation?.replace('Login');
+          }}
+        >
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
 

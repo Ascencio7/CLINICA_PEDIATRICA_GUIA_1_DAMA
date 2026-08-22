@@ -3,6 +3,7 @@ import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import API from '../config';
+import UserBanner from '../components/UserBanner';
 
 const MedicalHistoryScreen = ({ route }) => {
   const patient = route?.params?.patient;
@@ -45,8 +46,9 @@ const MedicalHistoryScreen = ({ route }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <UserBanner />
         <Text style={styles.header}>Historial Médico</Text>
-        {patient ? <Text style={styles.subHeader}>Paciente: {patient.name}</Text> : null}
+        {patient ? <Text style={styles.subHeader}>Paciente: {patient.name || patient.nombre}</Text> : null}
 
         <View style={styles.addRow}>
           <TextInput placeholder="Agregar nota clínica" style={styles.input} value={note} onChangeText={setNote} />

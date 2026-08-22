@@ -34,7 +34,7 @@ app.use('/api/history', historyRoutes);
 // Configurar el puerto para el back
 const port = process.env.PORT || 5000;
 
-app.listen(port, () =>{
+app.listen(port, '0.0.0.0', () =>{
     console.log(`Servidor ejecutandose en el puerto ${port}`);
     console.log('Rutas activas: /api/patients /api/appointments /api/history');
 })
