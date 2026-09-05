@@ -72,7 +72,6 @@ const SettingsScreen = ({ navigation }) => {
           activeOpacity={0.8}
           onPress={() => {
             setUserName('');
-            navigation?.reset({ index: 0, routes: [{ name: 'Login' }] });
           }}
         >
           <Text style={styles.logoutText}>Cerrar Sesión</Text>

@@ -56,7 +56,7 @@ const ProfileScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[styles.editButton, { backgroundColor: '#0A4D68', marginTop: 12 }]}
           activeOpacity={0.8}
-          onPress={() => navigation?.navigate('Historial')}
+          onPress={() => navigation?.navigate('Principal', { screen: 'Historial' })}
         >
           <Text style={styles.editButtonText}>Ver Historial Médico</Text>
         </TouchableOpacity>

@@ -16,9 +16,7 @@ const LoginScreen = ({ navigation }) => {
     
     setUserName(username.trim());
 
-    if (navigation) {
-      navigation.replace('Home');
-    }
+    navigation.replace('Private');
   };
 
   return (

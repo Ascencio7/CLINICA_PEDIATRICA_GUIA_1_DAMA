@@ -52,12 +52,16 @@ const MedicalHistoryScreen = ({ route }) => {
         <Text style={[styles.header, { color: colors.text }]}>Historial Médico</Text>
         {patient ? <Text style={[styles.subHeader, { color: colors.secondaryText }]}>Paciente: {patient.name || patient.nombre}</Text> : null}
 
-        <View style={styles.addRow}>
-          <TextInput placeholder="Agregar nota clínica" style={styles.input} value={note} onChangeText={setNote} />
-          <TouchableOpacity style={styles.addNoteBtn} onPress={addNote}>
-            <Text style={styles.addNoteText}>Añadir</Text>
-          </TouchableOpacity>
-        </View>
+        {patient ? (
+          <View style={styles.addRow}>
+            <TextInput placeholder="Agregar nota clínica" style={styles.input} value={note} onChangeText={setNote} />
+            <TouchableOpacity style={styles.addNoteBtn} onPress={addNote}>
+              <Text style={styles.addNoteText}>Añadir</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Text style={[styles.emptyState, { color: colors.secondaryText }]}>Selecciona un paciente desde Pacientes para agregar notas clínicas.</Text>
+        )}
 
         {records.map(r => (
           <View key={r.id} style={[styles.recordCard, { backgroundColor: colors.surface }]}>
@@ -89,6 +93,11 @@ const styles = StyleSheet.create({
   subHeader: {
     fontSize: 14,
     color: '#64748B',
+    marginBottom: 12,
+  },
+  emptyState: {
+    fontSize: 14,
+    lineHeight: 20,
     marginBottom: 12,
   },
   addRow: {

@@ -108,7 +108,7 @@ const PacientesScreen = ({ navigation }) => {
         }}>
           <Text style={styles.smallBtnText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.smallBtn} onPress={() => navigation?.navigate('Historial', { patient: item })}>
+        <TouchableOpacity style={styles.smallBtn} onPress={() => navigation?.navigate('HistorialPaciente', { patient: item })}>
           <Text style={styles.smallBtnText}>Historial</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#FEE2E2' }]} onPress={() => removePatient(item._id || item.id)}>
