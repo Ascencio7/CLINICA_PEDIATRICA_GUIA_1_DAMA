@@ -92,12 +92,12 @@ const PacientesScreen = ({ navigation }) => {
     const displayPhone = item.phone || item.telefono || item.phoneNumber || '';
     const displayEmail = item.email || item.correo || '';
     return (
-      <View style={styles.row}>
+      <View style={[styles.row, { backgroundColor: colors.surface }]}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.patientName, { color: colors.text }]}>{displayName}</Text>
-          {displayAge ? <Text style={styles.patientAge}>{displayAge} años</Text> : null}
-          {displayPhone ? <Text style={styles.patientAge}>Tel: {displayPhone}</Text> : null}
-          {displayEmail ? <Text style={styles.patientAge}>Email: {displayEmail}</Text> : null}
+          {displayAge ? <Text style={[styles.patientAge, { color: colors.secondaryText }]}>{displayAge} años</Text> : null}
+          {displayPhone ? <Text style={[styles.patientAge, { color: colors.secondaryText }]}>Tel: {displayPhone}</Text> : null}
+          {displayEmail ? <Text style={[styles.patientAge, { color: colors.secondaryText }]}>Email: {displayEmail}</Text> : null}
         </View>
         <TouchableOpacity style={styles.smallBtn} onPress={() => {
           setEditingId(item._id || item.id);
@@ -106,10 +106,10 @@ const PacientesScreen = ({ navigation }) => {
           setTelefono(displayPhone);
           setCorreo(displayEmail);
         }}>
-          <Text style={styles.smallBtnText}>Editar</Text>
+          <Text style={[styles.smallBtnText, { color: colors.text }]}>Editar</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.smallBtn} onPress={() => navigation?.navigate('HistorialPaciente', { patient: item })}>
-          <Text style={styles.smallBtnText}>Historial</Text>
+          <Text style={[styles.smallBtnText, { color: colors.text }]}>Historial</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#FEE2E2' }]} onPress={() => removePatient(item._id || item.id)}>
           <Text style={[styles.smallBtnText, { color: '#DC2626' }]}>Eliminar</Text>
@@ -125,16 +125,16 @@ const PacientesScreen = ({ navigation }) => {
       <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Añadir y gestionar pacientes</Text>
 
       <View style={styles.formRow}>
-        <TextInput placeholder="Nombre" style={styles.input} value={nombre} onChangeText={setNombre} />
-        <TextInput placeholder="Edad" style={[styles.input, { width: 80 }]} value={edad} onChangeText={setEdad} keyboardType="numeric" />
+        <TextInput placeholder="Nombre" placeholderTextColor={colors.secondaryText} style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]} value={nombre} onChangeText={setNombre} />
+        <TextInput placeholder="Edad" placeholderTextColor={colors.secondaryText} style={[styles.input, { width: 80, backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]} value={edad} onChangeText={setEdad} keyboardType="numeric" />
         <TouchableOpacity style={styles.addBtn} onPress={addPatient}>
           <Text style={styles.addBtnText}>{editingId ? 'Guardar' : 'Agregar'}</Text>
         </TouchableOpacity>
       </View>
       <View style={{ height: 8 }} />
       <View style={styles.formRow}>
-        <TextInput placeholder="Teléfono" style={[styles.input, { flex: 1 }]} value={telefono} onChangeText={setTelefono} />
-        <TextInput placeholder="Correo" style={[styles.input, { width: 200, marginLeft: 8 }]} value={correo} onChangeText={setCorreo} keyboardType="email-address" />
+        <TextInput placeholder="Teléfono" placeholderTextColor={colors.secondaryText} style={[styles.input, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]} value={telefono} onChangeText={setTelefono} />
+        <TextInput placeholder="Correo" placeholderTextColor={colors.secondaryText} style={[styles.input, { width: 200, marginLeft: 8, backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]} value={correo} onChangeText={setCorreo} keyboardType="email-address" />
       </View>
 
       <FlatList data={patients.filter(Boolean)} keyExtractor={(item, index) => String(item._id || item.id || `patient-${index}`)} renderItem={renderItem} style={{ marginTop: 12 }} />

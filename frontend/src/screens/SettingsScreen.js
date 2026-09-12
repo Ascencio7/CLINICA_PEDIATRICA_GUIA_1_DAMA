@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Switch, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Switch, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import UserBanner from '../components/UserBanner';
 import { useSession } from '../context/SessionContext';
 
 const SettingsScreen = ({ navigation }) => {
-  const { setUserName, darkMode, setDarkMode, colors } = useSession();
+  const { logout, darkMode, setDarkMode, colors } = useSession();
   const [notifications, setNotifications] = useState(true);
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -71,7 +71,24 @@ const SettingsScreen = ({ navigation }) => {
           style={styles.logoutButton}
           activeOpacity={0.8}
           onPress={() => {
-            setUserName('');
+            Alert.alert(
+              'Cerrar sesión',
+              '¿Deseas cerrar sesión?',
+              [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                  text: 'Cerrar sesión',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await logout();
+                    navigation.getParent()?.getParent()?.reset({
+                      index: 0,
+                      routes: [{ name: 'Login' }],
+                    });
+                  },
+                },
+              ]
+            );
           }}
         >
           <Text style={styles.logoutText}>Cerrar Sesión</Text>

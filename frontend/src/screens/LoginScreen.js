@@ -2,21 +2,42 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '../context/SessionContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import API from '../config';
 
 const LoginScreen = ({ navigation }) => {
-  const { setUserName, colors } = useSession();
+  const { setUserName, setToken, colors } = useSession();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
       alert("Por favor ingresa usuario y contraseña.");
       return;
     }
-    
-    setUserName(username.trim());
 
-    navigation.replace('Private');
+    try {
+      const response = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombreUsuario: username.trim(), contraseña: password }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.token) {
+        throw new Error(data.msg || 'No se pudo iniciar sesión.');
+      }
+
+      await AsyncStorage.multiSet([
+        ['token', data.token],
+        ['userName', username.trim()],
+      ]);
+      setToken(data.token);
+      setUserName(username.trim());
+      navigation.replace('Private');
+    } catch (error) {
+      alert(error.message || 'No se pudo iniciar sesión.');
+    }
   };
 
   return (
