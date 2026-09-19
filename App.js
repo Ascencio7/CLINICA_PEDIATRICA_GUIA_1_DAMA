@@ -15,6 +15,7 @@ import PacienteScreen from './frontend/src/screens/PacienteScreen'; // 👈 Nomb
 import AppointmentScreen from './frontend/src/screens/AppointmentScreen';
 import MedicalHistoryScreen from './frontend/src/screens/MedicalHistoryScreen';
 import HelpScreen from './frontend/src/screens/HelpScreen';
+import DatabaseScreen from './frontend/src/screens/DatabaseScreen';
 import { SessionProvider, useSession } from './frontend/src/context/SessionContext';
 
 const Stack = createNativeStackNavigator();
@@ -72,6 +73,7 @@ const PrivateStack = () => {
       <Stack.Screen name="Citas" component={AppointmentScreen} options={{ title: 'Citas' }} />
       <Stack.Screen name="Historial" component={MedicalHistoryScreen} options={{ title: 'Historial Médico' }} />
       <Stack.Screen name="Perfil" component={ProfileScreen} options={{ title: 'Mi Perfil' }} />
+      <Stack.Screen name="BaseSQLite" component={DatabaseScreen} options={{ title: 'Base SQLite' }} />
     </Stack.Navigator>
   );
 };

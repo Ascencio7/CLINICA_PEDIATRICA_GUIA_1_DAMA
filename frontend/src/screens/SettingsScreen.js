@@ -64,6 +64,16 @@ const SettingsScreen = ({ navigation }) => {
             <Text style={[styles.actionTitle, { color: colors.text }]}>Políticas de Privacidad Médica</Text>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <TouchableOpacity style={styles.actionRow} activeOpacity={0.7} onPress={() => navigation.navigate('BaseSQLite')}>
+            <View style={styles.settingTextContainer}>
+              <Text style={[styles.actionTitle, { color: colors.text }]}>Consultar base SQLite</Text>
+              <Text style={[styles.settingSubtitle, { color: colors.secondaryText }]}>Ver esquema y registros locales</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Cierre de Sesión */}

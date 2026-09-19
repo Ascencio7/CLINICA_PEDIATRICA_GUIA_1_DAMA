@@ -26,7 +26,9 @@ mongoose.connection.on('disconnected', () => console.warn('MongoDB disconnected'
 const patientsRoutes = require('./routes/patients');
 const appointmentsRoutes = require('./routes/appointments');
 const historyRoutes = require('./routes/history');
+const authRoutes = require('./routes/auth');
 
+app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientsRoutes);
 app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/history', historyRoutes);
@@ -36,5 +38,5 @@ const port = process.env.PORT || 5000;
 
 app.listen(port, '0.0.0.0', () =>{
     console.log(`Servidor ejecutandose en el puerto ${port}`);
-    console.log('Rutas activas: /api/patients /api/appointments /api/history');
+    console.log('Rutas activas: /api/auth /api/patients /api/appointments /api/history');
 })

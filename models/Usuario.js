@@ -23,8 +23,8 @@ UsuarioSchema.pre('save', async function (next){
         return next();
     }
 
-    const salt = await brcrypt.genSalt(10);
-    this.contraseña = await brcrypt.hash(this.contraseña, salt);
+    const salt = await bcrypt.genSalt(10);
+    this.contraseña = await bcrypt.hash(this.contraseña, salt);
     next();
 });
 
