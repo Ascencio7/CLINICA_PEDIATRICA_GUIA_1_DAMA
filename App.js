@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Pantallas con los nombres EXACTOS de tu estructura
 import LoginScreen from './frontend/src/screens/LoginScreen';
+import RegisterScreen from './frontend/src/screens/RegisterScreen';
 import HomeScreen from './frontend/src/screens/HomeScreen';
 import ProfileScreen from './frontend/src/screens/ProfileScreen';
 import SettingsScreen from './frontend/src/screens/SettingsScreen';
@@ -104,6 +105,11 @@ const AppContent = () => {
         <Stack.Screen 
           name="Login" 
           component={LoginScreen} 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="Register" 
+          component={RegisterScreen} 
           options={{ headerShown: false }} 
         />
         <Stack.Screen name="Private" component={PrivateStack} options={{ headerShown: false }} />

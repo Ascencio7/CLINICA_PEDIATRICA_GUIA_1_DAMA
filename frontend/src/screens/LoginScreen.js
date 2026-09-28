@@ -9,7 +9,6 @@ const LoginScreen = ({ navigation }) => {
   const { setUserName, setToken, colors } = useSession();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [registerMode, setRegisterMode] = useState(false);
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
@@ -18,7 +17,7 @@ const LoginScreen = ({ navigation }) => {
     }
 
     try {
-      const response = await fetch(`${API}/auth/${registerMode ? 'register' : 'login'}`, {
+      const response = await fetch(`${API}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombreUsuario: username.trim(), password }),
@@ -27,12 +26,6 @@ const LoginScreen = ({ navigation }) => {
 
       if (!response.ok) {
         throw new Error(data.msg || 'No se pudo iniciar sesión.');
-      }
-
-      if (registerMode) {
-        alert('Usuario registrado. Ahora puedes iniciar sesión.');
-        setRegisterMode(false);
-        return;
       }
 
       if (!data.token) throw new Error('La respuesta no contiene un token de acceso.');
@@ -60,7 +53,7 @@ const LoginScreen = ({ navigation }) => {
           {/* Logo / Encabezado */}
           <View style={styles.header}>
             <Text style={styles.title}>Clínica Pediátrica</Text>
-            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>{registerMode ? 'Crea tu cuenta de acceso' : 'Ingresa tus credenciales de acceso'}</Text>
+            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Ingresa tus credenciales de acceso</Text>
           </View>
 
           {/* Formulario */}
@@ -91,11 +84,11 @@ const LoginScreen = ({ navigation }) => {
               activeOpacity={0.8}
               onPress={handleSubmit}
             >
-              <Text style={styles.buttonText}>{registerMode ? 'Registrarme' : 'Iniciar Sesión'}</Text>
+              <Text style={styles.buttonText}>Iniciar Sesión</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.switchButton} onPress={() => setRegisterMode(current => !current)}>
-              <Text style={styles.switchText}>{registerMode ? 'Ya tengo una cuenta: iniciar sesión' : '¿No tienes cuenta? Regístrate'}</Text>
+            <TouchableOpacity style={styles.switchButton} onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.switchText}>¿No tienes cuenta? Regístrate</Text>
             </TouchableOpacity>
           </View>
 
