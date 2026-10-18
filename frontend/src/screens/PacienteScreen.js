@@ -1,15 +1,25 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 
 import UserBanner from '../components/UserBanner';
 import { useSession } from '../context/SessionContext';
-import { createPatient, deletePatient, listPatients, updatePatient } from '../database/database';
+
+const API_URL = 'http://192.168.1.123:5000/api/patients';
 
 const emptyForm = {
   nombre: '',
-  edad: '',
   telefono: '',
   correo: '',
   direccion: '',
@@ -19,29 +29,73 @@ const emptyForm = {
 const PacientesScreen = () => {
   const { colors } = useSession();
   const [patients, setPatients] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const loadPatients = useCallback(async () => {
     try {
-      setPatients(await listPatients());
+      setLoading(true);
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error('Error al consultar API');
+      const data = await response.json();
+      setPatients(data);
     } catch (error) {
-      console.warn('Error cargando pacientes desde SQLite:', error);
-      Alert.alert('SQLite', 'No se pudieron cargar los pacientes.');
+      console.warn('Error cargando pacientes desde Atlas:', error);
+      Alert.alert('MongoDB Atlas', 'No se pudieron cargar los pacientes desde la nube.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  useFocusEffect(useCallback(() => {
-    loadPatients();
-  }, [loadPatients]));
+  useFocusEffect(
+    useCallback(() => {
+      loadPatients();
+    }, [loadPatients])
+  );
 
-  const setField = (field, value) => setForm(current => ({ ...current, [field]: value }));
+  // Función para formatear el teléfono: máximo 8 dígitos + guion (Ej: 1234-5678)
+  const formatPhone = (text) => {
+    const cleaned = text.replace(/\D/g, '').slice(0, 8);
+    if (cleaned.length > 4) {
+      return `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+    }
+    return cleaned;
+  };
+
+  const setField = (field, value) => {
+    if (field === 'telefono') {
+      setForm(current => ({ ...current, [field]: formatPhone(value) }));
+    } else {
+      setForm(current => ({ ...current, [field]: value }));
+    }
+  };
 
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
     setShowDatePicker(false);
+  };
+
+  const calculateAge = (birthDateString) => {
+    if (!birthDateString) return null;
+    const today = new Date();
+    const birthDate = new Date(`${birthDateString}T12:00:00`);
+    if (Number.isNaN(birthDate.getTime())) return null;
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    if (age === 0) {
+      const months = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
+      return months <= 1 ? 'Menos de 1 mes' : `${months} meses`;
+    }
+    return `${age} ${age === 1 ? 'año' : 'años'}`;
   };
 
   const formatDate = value => {
@@ -56,189 +110,537 @@ const PacientesScreen = () => {
     return Number.isNaN(date.getTime()) ? new Date() : date;
   };
 
-  const handleDateChange = (_event, selectedDate) => {
+  const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (!selectedDate) return;
 
-    const year = selectedDate.getFullYear();
-    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const dateObj = new Date(selectedDate);
+    if (Number.isNaN(dateObj.getTime())) return;
+
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
     setField('fechaNacimiento', `${year}-${month}-${day}`);
   };
 
   const savePatient = async () => {
     if (!form.nombre.trim()) {
-      Alert.alert('Validación', 'El nombre es obligatorio.');
+      Alert.alert('Validación', 'El nombre del paciente es obligatorio.');
       return;
     }
 
-    const patient = {
-      ...form,
+    const patientData = {
+      name: form.nombre.trim(),
       nombre: form.nombre.trim(),
-      edad: form.edad ? Number.parseInt(form.edad, 10) : null,
+      phone: form.telefono,
+      telefono: form.telefono,
+      email: form.correo,
+      correo: form.correo,
+      address: form.direccion,
+      direccion: form.direccion,
+      birthDate: form.fechaNacimiento,
+      fechaNacimiento: form.fechaNacimiento,
+      age: calculateAge(form.fechaNacimiento),
+      edad: calculateAge(form.fechaNacimiento),
     };
 
     try {
-      if (editingId) await updatePatient(editingId, patient);
-      else await createPatient(patient);
+      let response;
+      if (editingId) {
+        response = await fetch(`${API_URL}/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patientData),
+        });
+      } else {
+        response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patientData),
+        });
+      }
+
+      const resData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resData.error || resData.message || 'Error al guardar datos');
+      }
+
       resetForm();
       await loadPatients();
+      Alert.alert('Éxito', `Paciente ${editingId ? 'actualizado' : 'registrado'} en MongoDB Atlas`);
     } catch (error) {
-      console.warn('Error guardando paciente en SQLite:', error);
-      Alert.alert('SQLite', 'No se pudo guardar el paciente.');
+      console.warn('Error guardando paciente en Atlas:', error.message);
+      Alert.alert('Error del Servidor', error.message);
     }
   };
 
   const editPatient = patient => {
-    setEditingId(patient.id);
+    setEditingId(patient._id || patient.id);
     setForm({
-      nombre: patient.nombre || '',
-      edad: patient.edad ? String(patient.edad) : '',
-      telefono: patient.telefono || '',
-      correo: patient.correo || '',
-      direccion: patient.direccion || '',
-      fechaNacimiento: patient.fecha_nacimiento || '',
+      nombre: patient.nombre || patient.name || '',
+      telefono: patient.telefono || patient.phone || '',
+      correo: patient.correo || patient.email || '',
+      direccion: patient.direccion || patient.address || '',
+      fechaNacimiento: patient.fechaNacimiento || patient.fecha_nacimiento || patient.birthDate || '',
     });
   };
 
   const removePatient = id => {
-    Alert.alert('Confirmar', '¿Eliminar este paciente?', [
+    Alert.alert('Confirmar', '¿Estás seguro de eliminar este paciente de la nube?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
         style: 'destructive',
         onPress: async () => {
           try {
-            await deletePatient(id);
+            const response = await fetch(`${API_URL}/${id}`, {
+              method: 'DELETE',
+            });
+            if (!response.ok) throw new Error('Error al eliminar');
             await loadPatients();
           } catch (error) {
-            console.warn('Error eliminando paciente de SQLite:', error);
-            Alert.alert('SQLite', 'No se pudo eliminar el paciente.');
+            console.warn('Error eliminando paciente de Atlas:', error);
+            Alert.alert('Error', 'No se pudo eliminar el paciente.');
           }
         },
       },
     ]);
   };
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={styles.patientInfo}>
-        <View style={styles.nameLine}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>{item.nombre.charAt(0).toUpperCase()}</Text></View>
-          <View style={styles.nameBlock}>
-            <Text style={[styles.patientName, { color: colors.text }]}>{item.nombre}</Text>
-            {item.edad ? <Text style={[styles.detail, { color: colors.secondaryText }]}>{item.edad} años</Text> : null}
+  const filteredPatients = patients.filter(p => {
+    const nombre = p.nombre || p.name || '';
+    const telefono = p.telefono || p.phone || '';
+    const query = searchQuery.toLowerCase();
+    
+    return nombre.toLowerCase().includes(query) || telefono.includes(query);
+  });
+
+  const renderItem = ({ item }) => {
+    const patientId = item._id || item.id;
+    const nombre = item.nombre || item.name || 'Sin Nombre';
+    const telefono = item.telefono || item.phone || '';
+    const correo = item.correo || item.email || '';
+    const direccion = item.direccion || item.address || '';
+    const fechaNac = item.fechaNacimiento || item.fecha_nacimiento || item.birthDate || '';
+    
+    const computedAge = calculateAge(fechaNac) || (item.edad || item.age ? `${item.edad || item.age}` : '');
+
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.cardHeader}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{nombre.charAt(0).toUpperCase()}</Text>
+          </View>
+          <View style={styles.patientMainInfo}>
+            <Text style={[styles.patientName, { color: colors.text }]}>{nombre}</Text>
+            {computedAge ? (
+              <Text style={[styles.ageBadge, { color: colors.primary || '#087EA4' }]}>
+                {computedAge}
+              </Text>
+            ) : null}
           </View>
         </View>
-        <View style={styles.detailsGrid}>
-          {item.telefono ? <Text style={[styles.detail, { color: colors.secondaryText }]}>Tel. {item.telefono}</Text> : null}
-          {item.correo ? <Text style={[styles.detail, { color: colors.secondaryText }]}>{item.correo}</Text> : null}
-          {item.direccion ? <Text style={[styles.detail, { color: colors.secondaryText }]}>Dir. {item.direccion}</Text> : null}
-          {item.fecha_nacimiento ? <Text style={[styles.detail, { color: colors.secondaryText }]}>Nac. {formatDate(item.fecha_nacimiento)}</Text> : null}
+
+        <View style={styles.cardBody}>
+          {telefono ? <Text style={[styles.detailText, { color: colors.secondaryText }]}>📞 {telefono}</Text> : null}
+          {correo ? <Text style={[styles.detailText, { color: colors.secondaryText }]}>✉️ {correo}</Text> : null}
+          {direccion ? <Text style={[styles.detailText, { color: colors.secondaryText }]}>📍 {direccion}</Text> : null}
+          {fechaNac ? (
+            <Text style={[styles.detailText, { color: colors.secondaryText }]}>
+              🎂 {formatDate(fechaNac)}
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={styles.cardActions}>
+          <TouchableOpacity style={styles.editBtn} onPress={() => editPatient(item)}>
+            <Text style={styles.editBtnText}>Editar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.deleteBtn} onPress={() => removePatient(patientId)}>
+            <Text style={styles.deleteBtnText}>Eliminar</Text>
+          </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity style={styles.smallBtn} onPress={() => editPatient(item)}>
-        <Text style={styles.smallBtnText}>Editar</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={[styles.smallBtn, styles.deleteBtn]} onPress={() => removePatient(item.id)}>
-        <Text style={[styles.smallBtnText, { color: '#DC2626' }]}>Eliminar</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <UserBanner />
-      <View style={styles.headingRow}>
-        <View>
-          <Text style={[styles.title, { color: colors.text }]}>Pacientes</Text>
-          <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Gestiona la información local de la clínica</Text>
-        </View>
-        <View style={styles.countBadge}><Text style={styles.countText}>{patients.length}</Text><Text style={styles.countLabel}>total</Text></View>
-      </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <FlatList
+        data={filteredPatients}
+        keyExtractor={item => String(item._id || item.id)}
+        renderItem={renderItem}
+        contentContainerStyle={styles.scrollContent}
+        refreshing={loading}
+        onRefresh={loadPatients}
+        ListHeaderComponent={
+          <>
+            <UserBanner />
 
-      <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <View style={styles.formHeader}>
-          <View>
-            <Text style={[styles.formTitle, { color: colors.text }]}>{editingId ? 'Editar paciente' : 'Nuevo paciente'}</Text>
-            <Text style={[styles.formHint, { color: colors.secondaryText }]}>Completa los datos principales</Text>
-          </View>
-          <TouchableOpacity style={styles.clearButton} onPress={resetForm}>
-            <Text style={styles.clearText}>Limpiar</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.formRow}>
-          <TextInput placeholder="Nombre completo" placeholderTextColor={colors.secondaryText} style={[styles.input, styles.flexInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]} value={form.nombre} onChangeText={value => setField('nombre', value)} />
-          <TextInput placeholder="Edad" placeholderTextColor={colors.secondaryText} style={[styles.input, styles.ageInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]} value={form.edad} onChangeText={value => setField('edad', value)} keyboardType="numeric" />
-        </View>
-        <View style={styles.formRow}>
-          <TextInput placeholder="Teléfono" placeholderTextColor={colors.secondaryText} style={[styles.input, styles.flexInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]} value={form.telefono} onChangeText={value => setField('telefono', value)} keyboardType="phone-pad" />
-          <TextInput placeholder="Correo electrónico" placeholderTextColor={colors.secondaryText} style={[styles.input, styles.flexInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]} value={form.correo} onChangeText={value => setField('correo', value)} keyboardType="email-address" autoCapitalize="none" />
-        </View>
-        <View style={styles.formRow}>
-          <TextInput placeholder="Dirección" placeholderTextColor={colors.secondaryText} style={[styles.input, styles.flexInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]} value={form.direccion} onChangeText={value => setField('direccion', value)} />
-          <TouchableOpacity style={[styles.dateButton, styles.flexInput, { backgroundColor: colors.input, borderColor: colors.border }]} onPress={() => setShowDatePicker(true)}>
-            <Text style={[styles.dateLabel, { color: form.fechaNacimiento ? colors.text : colors.secondaryText }]}>{form.fechaNacimiento ? formatDate(form.fechaNacimiento) : 'Fecha de nacimiento'}</Text>
-            <Text style={styles.calendarIcon}>▣</Text>
-          </TouchableOpacity>
-        </View>
-        {showDatePicker ? <DateTimePicker value={parseDate(form.fechaNacimiento)} mode="date" display="default" maximumDate={new Date()} onChange={handleDateChange} /> : null}
-        <View style={styles.actionRow}>
-          {editingId ? <TouchableOpacity style={styles.cancelBtn} onPress={resetForm}><Text style={styles.cancelText}>Cancelar edición</Text></TouchableOpacity> : <View />}
-          <TouchableOpacity style={styles.addBtn} onPress={savePatient}>
-            <Text style={styles.addBtnText}>{editingId ? 'Guardar cambios' : 'Agregar paciente'}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+            <View style={styles.headingRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.title, { color: colors.text }]}>Pacientes Pediátricos</Text>
+                <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
+                  Gestión y expedientes en la nube (Atlas)
+                </Text>
+              </View>
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>{patients.length}</Text>
+                <Text style={styles.countLabel}>total</Text>
+              </View>
+            </View>
 
-      <Text style={[styles.listTitle, { color: colors.text }]}>Pacientes registrados</Text>
+            <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.formHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.formTitle, { color: colors.text }]}>
+                    {editingId ? '✏️ Editar Paciente' : 'Nuevo Paciente'}
+                  </Text>
+                  <Text style={[styles.formHint, { color: colors.secondaryText }]}>
+                    Ingrese los datos del infante y contacto
+                  </Text>
+                </View>
+                <TouchableOpacity style={styles.clearButton} onPress={resetForm}>
+                  <Text style={styles.clearText}>Limpiar</Text>
+                </TouchableOpacity>
+              </View>
 
-      <FlatList data={patients} keyExtractor={item => String(item.id)} renderItem={renderItem} style={styles.list} ListEmptyComponent={<Text style={[styles.empty, { color: colors.secondaryText }]}>No hay pacientes guardados.</Text>} />
-    </View>
+              <View style={styles.formGrid}>
+                <View style={styles.fullWidthInput}>
+                  <TextInput
+                    placeholder="Nombre completo del paciente *"
+                    placeholderTextColor={colors.secondaryText}
+                    style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]}
+                    value={form.nombre}
+                    onChangeText={value => setField('nombre', value)}
+                  />
+                </View>
+
+                <View style={styles.responsiveCol}>
+                  <TextInput
+                    placeholder="Teléfono (8 dígitos)"
+                    placeholderTextColor={colors.secondaryText}
+                    style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]}
+                    value={form.telefono}
+                    onChangeText={value => setField('telefono', value)}
+                    keyboardType="phone-pad"
+                    maxLength={9} // 8 dígitos + 1 guion
+                  />
+                </View>
+
+                <View style={styles.responsiveCol}>
+                  <TextInput
+                    placeholder="Correo electrónico"
+                    placeholderTextColor={colors.secondaryText}
+                    style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]}
+                    value={form.correo}
+                    onChangeText={value => setField('correo', value)}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.responsiveCol}>
+                  <TextInput
+                    placeholder="Dirección residencial"
+                    placeholderTextColor={colors.secondaryText}
+                    style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.text }]}
+                    value={form.direccion}
+                    onChangeText={value => setField('direccion', value)}
+                  />
+                </View>
+
+                <View style={styles.responsiveCol}>
+                  <TouchableOpacity
+                    style={[styles.dateButton, { backgroundColor: colors.input, borderColor: colors.border }]}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Text
+                      numberOfLines={1}
+                      style={[styles.dateLabel, { color: form.fechaNacimiento ? colors.text : colors.secondaryText }]}
+                    >
+                      {form.fechaNacimiento ? formatDate(form.fechaNacimiento) : 'Fecha nacimiento'}
+                    </Text>
+                    <Text style={styles.calendarIcon}>📅</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={parseDate(form.fechaNacimiento)}
+                  mode="date"
+                  display="default"
+                  maximumDate={new Date()}
+                  onChange={handleDateChange}
+                />
+              )}
+
+              <View style={styles.actionRow}>
+                {editingId ? (
+                  <TouchableOpacity style={styles.cancelBtn} onPress={resetForm}>
+                    <Text style={styles.cancelText}>Cancelar</Text>
+                  </TouchableOpacity>
+                ) : null}
+                <TouchableOpacity style={styles.saveBtn} onPress={savePatient}>
+                  <Text style={styles.saveBtnText}>{editingId ? 'Guardar Cambios' : 'Registrar Paciente'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <Text style={[styles.listTitle, { color: colors.text }]}>Pacientes Registrados en Atlas</Text>
+            <TextInput
+              placeholder="Buscar paciente por nombre o teléfono..."
+              placeholderTextColor={colors.secondaryText}
+              style={[styles.searchInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </>
+        }
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
+            {loading ? 'Cargando pacientes desde la nube...' : 'No hay pacientes registrados en el clúster.'}
+          </Text>
+        }
+      />
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  headingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 16 },
-  title: { fontSize: 26, fontWeight: '800', letterSpacing: 0.2 },
-  subtitle: { fontSize: 14, marginTop: 5 },
-  countBadge: { backgroundColor: '#E6F4F1', minWidth: 58, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center' },
-  countText: { color: '#087EA4', fontSize: 20, fontWeight: '800' },
-  countLabel: { color: '#087EA4', fontSize: 11, fontWeight: '600' },
-  formCard: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 18 },
-  formHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
-  formTitle: { fontSize: 17, fontWeight: '800' },
-  formHint: { fontSize: 12, marginTop: 3 },
-  clearButton: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: '#F1F5F9' },
-  clearText: { color: '#475569', fontSize: 12, fontWeight: '700' },
-  formRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 9 },
-  input: { height: 44, borderWidth: 1, borderRadius: 9, paddingHorizontal: 11, fontSize: 14, marginRight: 8 },
-  flexInput: { flex: 1 },
-  ageInput: { width: 70 },
-  dateButton: { height: 44, borderWidth: 1, borderRadius: 9, paddingHorizontal: 11, marginRight: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dateLabel: { fontSize: 14 },
-  calendarIcon: { color: '#087EA4', fontSize: 17 },
-  actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  addBtn: { backgroundColor: '#0A4D68', paddingHorizontal: 14, paddingVertical: 12, borderRadius: 9 },
-  addBtnText: { color: '#FFFFFF', fontWeight: '600' },
-  cancelBtn: { paddingVertical: 8 },
-  cancelText: { color: '#0A4D68', fontWeight: '600' },
-  listTitle: { fontSize: 17, fontWeight: '800', marginBottom: 9 },
-  list: { marginTop: 0 },
-  row: { borderWidth: 1, borderRadius: 14, padding: 13, marginBottom: 10, flexDirection: 'row', alignItems: 'center' },
-  patientInfo: { flex: 1 },
-  nameLine: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#D9F0F2', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  avatarText: { color: '#0A4D68', fontSize: 16, fontWeight: '800' },
-  nameBlock: { flex: 1 },
-  patientName: { fontSize: 16, fontWeight: '700' },
-  detailsGrid: { marginLeft: 48, marginTop: 5 },
-  detail: { fontSize: 12, marginTop: 4 },
-  smallBtn: { backgroundColor: '#EFF6FF', paddingHorizontal: 9, paddingVertical: 7, borderRadius: 8, marginLeft: 8 },
-  deleteBtn: { backgroundColor: '#FEE2E2' },
-  smallBtnText: { color: '#0A4D68', fontWeight: '600' },
-  empty: { textAlign: 'center', marginTop: 24 },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  headingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  subtitle: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  countBadge: {
+    backgroundColor: '#E6F4F1',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  countText: {
+    color: '#087EA4',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  countLabel: {
+    color: '#087EA4',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  formCard: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 18,
+  },
+  formHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  formTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  formHint: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  clearButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#F1F5F9',
+  },
+  clearText: {
+    color: '#475569',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  formGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  fullWidthInput: {
+    width: '100%',
+    paddingHorizontal: 4,
+    marginBottom: 10,
+  },
+  responsiveCol: {
+    width: '50%',
+    minWidth: 140,
+    paddingHorizontal: 4,
+    marginBottom: 10,
+    flexGrow: 1,
+  },
+  input: {
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 14,
+  },
+  dateButton: {
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dateLabel: {
+    fontSize: 13,
+    flex: 1,
+  },
+  calendarIcon: {
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 8,
+  },
+  cancelBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  cancelText: {
+    color: '#64748B',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  saveBtn: {
+    backgroundColor: '#0A4D68',
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 8,
+  },
+  saveBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  listTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  searchInput: {
+    height: 42,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    marginBottom: 14,
+  },
+  card: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  avatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#D9F0F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  avatarText: {
+    color: '#0A4D68',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  patientMainInfo: {
+    flex: 1,
+  },
+  patientName: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  ageBadge: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 1,
+  },
+  cardBody: {
+    marginBottom: 10,
+    gap: 2,
+  },
+  detailText: {
+    fontSize: 13,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E2E8F0',
+    pt: 8,
+    paddingTop: 8,
+  },
+  editBtn: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  editBtnText: {
+    color: '#0A4D68',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  deleteBtn: {
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  deleteBtnText: {
+    color: '#DC2626',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginVertical: 24,
+    fontSize: 14,
+  },
 });
 
 export default PacientesScreen;

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const Usuario = require('./models/Usuario');
 
-const MONGO_URL = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/sistema-clinica';
+const MONGO_URL = process.env.MONGO_URL || 'mongodb+srv://vladimirramos405_db_user:xkAM3Ju0n92LV0Qp@cluster0.mno5obw.mongodb.net/sistema-clinica?retryWrites=true&w=majority&appName=Cluster0';
 const nombreUsuario = process.env.APP_USER || 'admin';
 const contraseña = process.env.APP_PASSWORD || 'admin123';
 

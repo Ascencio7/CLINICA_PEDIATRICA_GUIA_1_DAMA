@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // Conexion a la base de datos
-const MONGO_URL = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/sistema-clinica';
+const MONGO_URL = process.env.MONGO_URL || 'mongodb+srv://vladimirramos405_db_user:xkAM3Ju0n92LV0Qp@cluster0.mno5obw.mongodb.net/sistema-clinica?retryWrites=true&w=majority&appName=Cluster0';
 
 mongoose.connect(MONGO_URL)
     .then(() => console.log('MongoDB conectado a', MONGO_URL))
@@ -36,7 +36,11 @@ app.use('/api/history', historyRoutes);
 // Configurar el puerto para el back
 const port = process.env.PORT || 5000;
 
-app.listen(port, '0.0.0.0', () =>{
-    console.log(`Servidor ejecutandose en el puerto ${port}`);
-    console.log('Rutas activas: /api/auth /api/patients /api/appointments /api/history');
-})
+app.listen(port, '0.0.0.0', () => {
+    console.log('\n');
+    console.log(`Servidor backend ejecutándose correctamente`);
+    console.log(`Puerto activo: ${port}`);
+    console.log(`Local: http://localhost:${port}`);
+    console.log(`Red local: http://0.0.0.0:${port}`);
+    console.log('Rutas activas: /api/auth /api/patients /api/appointments /api/history\n');
+});

@@ -15,15 +15,16 @@ router.get('/', async (req, res) => {
 // Create patient
 router.post('/', async (req, res) => {
   try {
-    // Accept both English and Spanish keys
     const name = req.body.name || req.body.nombre;
     const age = req.body.age || req.body.edad;
-    const phone = req.body.phone || req.body.telefono || req.body.telefono_celular;
-    const email = req.body.email || req.body.correo || req.body.email_address;
+    const phone = req.body.phone || req.body.telefono;
+    const email = req.body.email || req.body.correo;
+    const address = req.body.address || req.body.direccion;
+    const birthDate = req.body.birthDate || req.body.fechaNacimiento;
 
     if (!name) return res.status(400).json({ error: 'El nombre es requerido' });
 
-    const p = new Patient({ name, age, phone, email });
+    const p = new Patient({ name, age, phone, email, address, birthDate });
     await p.save();
     res.status(201).json(p);
   } catch (err) {
@@ -57,16 +58,20 @@ router.put('/:id', async (req, res) => {
   try {
     const name = req.body.name || req.body.nombre;
     const age = req.body.age || req.body.edad;
-    const phone = req.body.phone || req.body.telefono || req.body.telefono_celular;
-    const email = req.body.email || req.body.correo || req.body.email_address;
+    const phone = req.body.phone || req.body.telefono;
+    const email = req.body.email || req.body.correo;
+    const address = req.body.address || req.body.direccion;
+    const birthDate = req.body.birthDate || req.body.fechaNacimiento;
 
     const update = {};
     if (name !== undefined) update.name = name;
     if (age !== undefined) update.age = age;
     if (phone !== undefined) update.phone = phone;
     if (email !== undefined) update.email = email;
+    if (address !== undefined) update.address = address;
+    if (birthDate !== undefined) update.birthDate = birthDate;
 
-    const p = await Patient.findByIdAndUpdate(req.params.id, update, { new: true });
+  const p = await Patient.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!p) return res.status(404).json({ error: 'No encontrado' });
     res.json(p);
   } catch (err) {
