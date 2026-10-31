@@ -16,7 +16,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import UserBanner from '../components/UserBanner';
 import { useSession } from '../context/SessionContext';
 
-const API_URL = 'http://192.168.1.123:5000/api/patients';
+import API from '../config';
+
+const API_URL = `${API}/patients`;
 
 const emptyForm = {
   nombre: '',
