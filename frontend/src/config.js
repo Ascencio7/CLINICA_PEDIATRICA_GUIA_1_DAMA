@@ -42,6 +42,6 @@ function resolveHost() {
 }
 
 const host = resolveHost();
-const API = process.env.EXPO_PUBLIC_API_URL || `http://${host}:5000/api`;
+const API = process.env.EXPO_PUBLIC_API_URL || 'https://clinica-pediatrica-guia-1-dama.onrender.com/api';
 
 export default API;
